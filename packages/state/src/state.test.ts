@@ -14,6 +14,12 @@ describe("State", () => {
     expect(state.get()).toBe(0);
   });
 
+  test("set value", () => {
+    state.set(2);
+
+    expect(state.get()).toBe(2);
+  });
+
   test("subscribe", () => {
     state.addListener(listener);
     state.set(1);
