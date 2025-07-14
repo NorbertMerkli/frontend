@@ -90,3 +90,11 @@ export class DerivedState<T> extends ReadonlyState<T> {
       isActive ? this.attach() : this.detach();
   }
 }
+
+export class LinkedState<T> extends DerivedState<T> {
+  constructor(derive: (get: <U>(state: ReadonlyState<U>) => U) => T) {
+    super(derive);
+  }
+
+  set = this.setValue;
+}

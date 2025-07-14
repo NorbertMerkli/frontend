@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { DerivedState, State } from "./state";
+import { DerivedState, LinkedState, State } from "./state";
 
 let value: number;
 
@@ -63,6 +63,30 @@ describe("DerivedState", () => {
     state.set(2);
 
     expect(derivedState.get()).toBe(8);
+    expect(value).toBe(8);
+  });
+});
+
+describe("LinkedState", () => {
+  const state = new State(1);
+  const linkedState = new LinkedState((get) => get(state) * 2);
+
+  test("get linked value", () => {
+    linkedState.addListener(listener);
+    state.set(2);
+
+    expect(value).toBe(4);
+  });
+
+  test("set value directly", () => {
+    linkedState.set(1);
+
+    expect(value).toBe(1);
+  });
+
+  test("reset value with linked", () => {
+    state.set(4);
+
     expect(value).toBe(8);
   });
 });
