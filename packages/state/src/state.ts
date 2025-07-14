@@ -1,92 +1,92 @@
-export interface Observable<T> {
-  addListener: (listener: (value: T) => void) => void;
-  removeListener: (listener: (value: T) => void) => void;
-  getListenerCount: () => number;
-}
+class EventEmitter<T> {
+  private readonly listeners = new Set<(value: T) => void>();
 
-export interface ReadonlyState<T> extends Observable<T> {
-  get: () => T;
-}
-
-export interface State<T> extends ReadonlyState<T> {
-  set: (value: T) => void;
-}
-
-export function createState<T>(initialValue: T): State<T> {
-  const listeners = new Set<(value: T) => void>();
-
-  let value = initialValue;
-
-  const state = Object.create(null);
-
-  state.addListener = (listener: (value: T) => void) => {
-    listeners.add(listener);
+  protected emit = (value: T) => {
+    for (const listener of this.listeners) listener(value);
   };
 
-  state.removeListener = (listener: (value: T) => void) => {
-    listeners.delete(listener);
+  protected onStatusChange: ((isActive: boolean) => void) | undefined;
+
+  addListener = (listener: (value: T) => void) => {
+    this.listeners.add(listener);
+
+    if (this.listeners.size === 1) this.onStatusChange?.(true);
   };
 
-  state.getListenerCount = () => listeners.size;
+  removeListener = (listener: (value: T) => void) => {
+    this.listeners.delete(listener);
 
-  state.get = () => value;
+    if (this.listeners.size === 0) this.onStatusChange?.(false);
+  };
+}
 
-  state.set = (newValue: T) => {
-    if (!Object.is(newValue, value)) {
-      value = newValue;
+class Observable<T> extends EventEmitter<T> {
+  private value: T;
 
-      for (const listener of listeners) listener(value);
+  protected getValue = () => this.value;
+
+  protected setValue = (value: T) => {
+    if (!Object.is(value, this.value)) {
+      this.value = value;
+
+      this.emit(this.value);
     }
   };
 
-  return state;
+  constructor(initialValue: T) {
+    super();
+
+    this.value = initialValue;
+  }
 }
 
-export function createDerivedState<T>(
-  derive: (get: <U>(state: ReadonlyState<U>) => U) => T
-): ReadonlyState<T> {
-  const dependencies = new Set<ReadonlyState<any>>();
+class ReadonlyState<T> extends Observable<T> {
+  constructor(initialValue: T) {
+    super(initialValue);
+  }
 
-  const state = createState(
-    derive((state) => {
-      dependencies.add(state);
+  get = this.getValue;
+}
 
-      return state.get();
-    })
-  );
+export class State<T> extends ReadonlyState<T> {
+  constructor(initialValue: T) {
+    super(initialValue);
+  }
 
-  const derivedState = Object.create(null);
+  set = this.setValue;
+}
 
-  derivedState.get = state.get;
-  derivedState.getListenerCount = state.getListenerCount;
+export class DerivedState<T> extends ReadonlyState<T> {
+  private dependencies: Set<ReadonlyState<T>>;
 
-  derivedState.reset = () => state.set(derive((state) => state.get()));
+  private reset: () => void;
 
-  derivedState.attach = () => {
-    for (const dependency of dependencies) {
-      dependency.addListener(derivedState.reset);
-    }
+  private attach = () => {
+    for (const state of this.dependencies) state.addListener(this.reset);
 
-    derivedState.reset();
+    this.reset();
   };
 
-  derivedState.detach = () => {
-    for (const dependency of dependencies) {
-      dependency.removeListener(derivedState.reset);
-    }
+  private detach = () => {
+    for (const state of this.dependencies) state.removeListener(this.reset);
   };
 
-  derivedState.addListener = (listener: (value: T) => void) => {
-    state.addListener(listener);
+  constructor(derive: (get: <U>(state: ReadonlyState<U>) => U) => T) {
+    const dependencies = new Set<ReadonlyState<any>>();
 
-    if (state.getListenerCount() === 1) derivedState.attach();
-  };
+    super(
+      derive((state) => {
+        dependencies.add(state);
 
-  derivedState.removeListener = (listener: (value: T) => void) => {
-    state.removeListener(listener);
+        return state.get();
+      })
+    );
 
-    if (state.getListenerCount() === 0) derivedState.detach();
-  };
+    this.dependencies = dependencies;
 
-  return derivedState;
+    this.reset = () => this.setValue(derive((state) => state.get()));
+
+    this.onStatusChange = (isActive) =>
+      isActive ? this.attach() : this.detach();
+  }
 }

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { createDerivedState, createState } from "./state";
+
+import { DerivedState, State } from "./state";
 
 let value: number;
 
@@ -8,7 +9,7 @@ function listener(newValue: number): void {
 }
 
 describe("State", () => {
-  const state = createState(0);
+  const state = new State(0);
 
   test("get value", () => {
     expect(state.get()).toBe(0);
@@ -36,8 +37,8 @@ describe("State", () => {
 });
 
 describe("DerivedState", () => {
-  const state = createState(1);
-  const derivedState = createDerivedState((get) => get(state) * 2);
+  const state = new State(1);
+  const derivedState = new DerivedState((get) => get(state) * 2);
 
   test("get derived value", () => {
     expect(derivedState.get()).toBe(2);
