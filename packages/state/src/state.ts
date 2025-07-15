@@ -1,26 +1,38 @@
-class EventEmitter<T> {
-  private readonly listeners = new Set<(value: T) => void>();
+const scheduledCallbacks = new Set<() => void>();
 
-  protected emit = (value: T) => {
-    for (const listener of this.listeners) listener(value);
+let isScheduled = false;
+
+class EventEmitter {
+  private readonly listeners = new Set<() => void>();
+
+  protected emit = () => {
+    if (!isScheduled) {
+      queueMicrotask(() => {
+        for (const callback of scheduledCallbacks) callback();
+      });
+    }
+
+    for (const listener of this.listeners) {
+      scheduledCallbacks.add(listener);
+    }
   };
 
   protected onStatusChange: ((isActive: boolean) => void) | undefined;
 
-  addListener = (listener: (value: T) => void) => {
+  addListener = (listener: () => void) => {
     this.listeners.add(listener);
 
     if (this.listeners.size === 1) this.onStatusChange?.(true);
   };
 
-  removeListener = (listener: (value: T) => void) => {
+  removeListener = (listener: () => void) => {
     this.listeners.delete(listener);
 
     if (this.listeners.size === 0) this.onStatusChange?.(false);
   };
 }
 
-class Observable<T> extends EventEmitter<T> {
+class Observable<T> extends EventEmitter {
   private value: T;
 
   protected getValue = () => this.value;
@@ -29,7 +41,7 @@ class Observable<T> extends EventEmitter<T> {
     if (!Object.is(value, this.value)) {
       this.value = value;
 
-      this.emit(this.value);
+      this.emit();
     }
   };
 
