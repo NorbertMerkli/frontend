@@ -1,31 +1,43 @@
-const scheduledCallbacks = new Set<() => void>();
+const SYMBOL_INTERNAL = Symbol("INTERNAL");
+
+type Listener = Function & { [SYMBOL_INTERNAL]?: boolean };
+
+const scheduledCallbacks = new Set<Listener>();
 
 let isScheduled = false;
 
 class EventEmitter {
-  private readonly listeners = new Set<() => void>();
+  private readonly listeners = new Set<Listener>();
 
   protected emit = () => {
     if (!isScheduled) {
+      isScheduled = true;
+
       queueMicrotask(() => {
         for (const callback of scheduledCallbacks) callback();
+
+        isScheduled = false;
       });
     }
 
     for (const listener of this.listeners) {
-      scheduledCallbacks.add(listener);
+      if (listener[SYMBOL_INTERNAL]) {
+        listener();
+      } else {
+        scheduledCallbacks.add(listener);
+      }
     }
   };
 
   protected onStatusChange: ((isActive: boolean) => void) | undefined;
 
-  addListener = (listener: () => void) => {
+  addListener = (listener: Listener) => {
     this.listeners.add(listener);
 
     if (this.listeners.size === 1) this.onStatusChange?.(true);
   };
 
-  removeListener = (listener: () => void) => {
+  removeListener = (listener: Listener) => {
     this.listeners.delete(listener);
 
     if (this.listeners.size === 0) this.onStatusChange?.(false);
@@ -71,7 +83,7 @@ export class State<T> extends ReadonlyState<T> {
 export class DerivedState<T> extends ReadonlyState<T> {
   private dependencies: Set<ReadonlyState<T>>;
 
-  private reset: () => void;
+  private reset: Listener;
 
   private attach = () => {
     for (const state of this.dependencies) state.addListener(this.reset);
@@ -97,6 +109,8 @@ export class DerivedState<T> extends ReadonlyState<T> {
     this.dependencies = dependencies;
 
     this.reset = () => this.setValue(derive((state) => state.get()));
+
+    this.reset[SYMBOL_INTERNAL] = true;
 
     this.onStatusChange = (isActive) =>
       isActive ? this.attach() : this.detach();
