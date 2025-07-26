@@ -64,7 +64,7 @@ class Observable<T> extends EventEmitter {
   }
 }
 
-class ReadonlyState<T> extends Observable<T> {
+class ReadonlySignal<T> extends Observable<T> {
   constructor(initialValue: T) {
     super(initialValue);
   }
@@ -72,7 +72,7 @@ class ReadonlyState<T> extends Observable<T> {
   get = this.getValue;
 }
 
-export class State<T> extends ReadonlyState<T> {
+export class Signal<T> extends ReadonlySignal<T> {
   constructor(initialValue: T) {
     super(initialValue);
   }
@@ -80,8 +80,8 @@ export class State<T> extends ReadonlyState<T> {
   set = this.setValue;
 }
 
-export class DerivedState<T> extends ReadonlyState<T> {
-  private dependencies: Set<ReadonlyState<T>>;
+export class DerivedSignal<T> extends ReadonlySignal<T> {
+  private dependencies: Set<ReadonlySignal<T>>;
 
   private reset: Listener;
 
@@ -95,8 +95,8 @@ export class DerivedState<T> extends ReadonlyState<T> {
     for (const state of this.dependencies) state.removeListener(this.reset);
   };
 
-  constructor(derive: (get: <U>(state: ReadonlyState<U>) => U) => T) {
-    const dependencies = new Set<ReadonlyState<any>>();
+  constructor(derive: (get: <U>(state: ReadonlySignal<U>) => U) => T) {
+    const dependencies = new Set<ReadonlySignal<any>>();
 
     super(
       derive((state) => {
@@ -117,8 +117,8 @@ export class DerivedState<T> extends ReadonlyState<T> {
   }
 }
 
-export class LinkedState<T> extends DerivedState<T> {
-  constructor(derive: (get: <U>(state: ReadonlyState<U>) => U) => T) {
+export class LinkedSignal<T> extends DerivedSignal<T> {
+  constructor(derive: (get: <U>(state: ReadonlySignal<U>) => U) => T) {
     super(derive);
   }
 
