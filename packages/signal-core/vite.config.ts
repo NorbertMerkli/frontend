@@ -11,5 +11,5 @@ export default defineConfig({
     minify: true,
     emptyOutDir: true,
   },
-  plugins: [dts({ exclude: "**/*.test.ts" })],
+  plugins: [dts({ exclude: "**/*.test.ts", rollupTypes: true })],
 });

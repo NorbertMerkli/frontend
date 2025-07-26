@@ -21,7 +21,7 @@ importers:
         specifier: 5.8.3
         version: 5.8.3
 
-  packages/state:
+  packages/signal:
     devDependencies:
       typescript:
         specifier: ~5.8.3

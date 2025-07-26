@@ -1,8 +1,16 @@
 {
-  "name": "state",
+  "name": "signal-core",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "./dist/signal-core.js",
+  "module": "./dist/signal-core.js",
+  "types": "./dist/signal-core.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/signal-core.js"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
