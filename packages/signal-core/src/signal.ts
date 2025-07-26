@@ -64,7 +64,7 @@ class Observable<T> extends EventEmitter {
   }
 }
 
-class ReadonlySignal<T> extends Observable<T> {
+class _ReadonlySignal<T> extends Observable<T> {
   constructor(initialValue: T) {
     super(initialValue);
   }
@@ -72,7 +72,9 @@ class ReadonlySignal<T> extends Observable<T> {
   get = this.getValue;
 }
 
-export class Signal<T> extends ReadonlySignal<T> {
+export type ReadonlySignal<T> = _ReadonlySignal<T>;
+
+export class Signal<T> extends _ReadonlySignal<T> {
   constructor(initialValue: T) {
     super(initialValue);
   }
@@ -80,8 +82,8 @@ export class Signal<T> extends ReadonlySignal<T> {
   set = this.setValue;
 }
 
-export class DerivedSignal<T> extends ReadonlySignal<T> {
-  private dependencies: Set<ReadonlySignal<T>>;
+export class DerivedSignal<T> extends _ReadonlySignal<T> {
+  private dependencies: Set<_ReadonlySignal<T>>;
 
   private reset: Listener;
 
@@ -95,8 +97,8 @@ export class DerivedSignal<T> extends ReadonlySignal<T> {
     for (const state of this.dependencies) state.removeListener(this.reset);
   };
 
-  constructor(derive: (get: <U>(state: ReadonlySignal<U>) => U) => T) {
-    const dependencies = new Set<ReadonlySignal<any>>();
+  constructor(derive: (get: <U>(state: _ReadonlySignal<U>) => U) => T) {
+    const dependencies = new Set<_ReadonlySignal<any>>();
 
     super(
       derive((state) => {
@@ -118,7 +120,7 @@ export class DerivedSignal<T> extends ReadonlySignal<T> {
 }
 
 export class LinkedSignal<T> extends DerivedSignal<T> {
-  constructor(derive: (get: <U>(state: ReadonlySignal<U>) => U) => T) {
+  constructor(derive: (get: <U>(state: _ReadonlySignal<U>) => U) => T) {
     super(derive);
   }
 
