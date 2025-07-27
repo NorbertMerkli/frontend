@@ -19,5 +19,8 @@ export default defineConfig({
     },
     minify: true,
     emptyOutDir: true,
+    rollupOptions: {
+      external: ["react", "react-dom"],
+    },
   },
 });
