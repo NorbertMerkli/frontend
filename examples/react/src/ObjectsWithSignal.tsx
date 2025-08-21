@@ -1,6 +1,6 @@
 import { useCallback, type ChangeEvent } from "react";
 import {
-  DerivedSignal,
+  ComputedSignal,
   Signal,
   useSetSignal,
   useSignalValue,
@@ -19,9 +19,9 @@ const user = new Signal<State>({
   age: null,
   gender: null,
 });
-const name = new DerivedSignal((get) => get(user).name ?? "");
-const age = new DerivedSignal((get) => get(user).age ?? 0);
-const gender = new DerivedSignal((get) => get(user).gender);
+const name = new ComputedSignal((get) => get(user).name ?? "");
+const age = new ComputedSignal((get) => get(user).age ?? 0);
+const gender = new ComputedSignal((get) => get(user).gender);
 
 export const ObjectsWithSignal = () => {
   return (

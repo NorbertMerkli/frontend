@@ -1,162 +1,131 @@
-import { afterEach, describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 
-import { DerivedSignal, LinkedSignal, Signal } from "./signal";
+import { ComputedSignal, Signal } from "./signal";
 
 describe("Signal", () => {
-  const signal = new Signal(0);
+  test("initialize", () => {
+    const signal = new Signal(0);
 
-  let value: number | undefined;
-
-  function listener(): void {
-    value = signal.get();
-  }
-
-  afterEach(() => {
-    // Reset after each test
-    signal.set(0);
-    value = undefined;
+    expect(signal.value).toBe(0);
   });
 
-  test("get value", () => {
-    expect(signal.get()).toBe(0);
-  });
+  test("notify listeners", () => {
+    const signal = new Signal(0);
 
-  test("set value", () => {
-    signal.set(2);
+    expect(signal.value).toBe(0);
 
-    expect(signal.get()).toBe(2);
-  });
+    let value = signal.value;
 
-  test("subscribe", () => {
-    signal.addListener(listener);
-    signal.set(1);
+    signal.addListener(() => (value = signal.value));
+
+    signal.value++;
+
+    expect(signal.value).toBe(1);
 
     queueMicrotask(() => expect(value).toBe(1));
   });
 
-  test("unsubscribe", () => {
-    signal.removeListener(listener);
-    signal.set(1);
+  test("batch updates", () => {
+    const signal = new Signal(0);
 
-    queueMicrotask(() => expect(value).toBe(undefined));
+    expect(signal.value).toBe(0);
+
+    let value = signal.value;
+
+    signal.addListener(() => (value = signal.value));
+
+    signal.value++;
+
+    expect(signal.value).toBe(1);
+
+    queueMicrotask(() => expect(value).toBe(2));
+
+    signal.value++;
+
+    expect(signal.value).toBe(2);
+
+    queueMicrotask(() => expect(value).toBe(2));
   });
 });
 
-describe("DerivedSignal", () => {
-  const signal = new Signal(1);
-  const derivedSignal = new DerivedSignal((get) => get(signal) * 2);
+describe("ComputedSignal", () => {
+  test("initialize", () => {
+    const signalA = new Signal(1);
+    const signalB = new Signal(1);
+    const computedSignal = new ComputedSignal(
+      (get) => get(signalA) + get(signalB)
+    );
 
-  let value: number | undefined;
-
-  function listener(): void {
-    value = derivedSignal.get();
-  }
-
-  afterEach(() => {
-    // Reset after each test
-    signal.set(1);
-    value = undefined;
-  });
-
-  test("get derived value", () => {
-    expect(derivedSignal.get()).toBe(2);
+    expect(computedSignal.value).toBe(2);
   });
 
   test("stay passive while no listener", () => {
-    signal.set(2);
+    const signalA = new Signal(1);
+    const signalB = new Signal(1);
+    const computedSignal = new ComputedSignal(
+      (get) => get(signalA) + get(signalB)
+    );
 
-    expect(derivedSignal.get()).toBe(2);
-  });
+    expect(computedSignal.value).toBe(2);
 
-  test("attach on first listener", () => {
-    derivedSignal.addListener(listener);
-    signal.set(2);
+    signalA.value++;
 
-    queueMicrotask(() => {
-      expect(derivedSignal.get()).toBe(4);
-      expect(value).toBe(4);
-    });
-  });
+    expect(computedSignal.value).toBe(2);
 
-  test("detach after last listener leaves", () => {
-    derivedSignal.removeListener(listener);
-    signal.set(2);
+    let value = computedSignal.value;
 
-    queueMicrotask(() => {
-      expect(derivedSignal.get()).toBe(2);
-      expect(value).toBe(undefined);
-    });
-  });
-});
+    computedSignal.addListener(() => (value = computedSignal.value));
 
-describe("LinkedSignal", () => {
-  const signal = new Signal(1);
-  const linkedSignal = new LinkedSignal((get) => get(signal) * 2);
+    signalB.value++;
 
-  let value: number | undefined;
-
-  function listener(): void {
-    value = linkedSignal.get();
-  }
-
-  afterEach(() => {
-    // Reset after each test
-    signal.set(1);
-    value = undefined;
-  });
-
-  test("get linked value", () => {
-    linkedSignal.addListener(listener);
-    signal.set(2);
+    expect(computedSignal.value).toBe(4);
 
     queueMicrotask(() => expect(value).toBe(4));
   });
 
-  test("set value directly", () => {
-    linkedSignal.set(1);
+  test("notify listeners", () => {
+    const signalA = new Signal(1);
+    const signalB = new Signal(1);
+    const computedSignal = new ComputedSignal(
+      (get) => get(signalA) + get(signalB)
+    );
 
-    queueMicrotask(() => expect(value).toBe(1));
+    expect(computedSignal.value).toBe(2);
+
+    let value = computedSignal.value;
+
+    computedSignal.addListener(() => (value = computedSignal.value));
+
+    signalA.value++;
+
+    expect(computedSignal.value).toBe(3);
+
+    queueMicrotask(() => expect(value).toBe(3));
   });
 
-  test("reset value with linked", () => {
-    signal.set(2);
+  test("batch updates", () => {
+    const signalA = new Signal(1);
+    const signalB = new Signal(1);
+    const computedSignal = new ComputedSignal(
+      (get) => get(signalA) + get(signalB)
+    );
+
+    expect(computedSignal.value).toBe(2);
+
+    let value = computedSignal.value;
+
+    computedSignal.addListener(() => (value = computedSignal.value));
+
+    signalA.value++;
+
+    expect(computedSignal.value).toBe(3);
 
     queueMicrotask(() => expect(value).toBe(4));
-  });
-});
 
-describe("Scheduling tasks", () => {
-  const a = new Signal(1);
-  const b = new Signal(1);
-  const c = new DerivedSignal((get) => get(a) + get(b));
+    signalB.value++;
 
-  let eventCount = 0;
+    expect(computedSignal.value).toBe(4);
 
-  let value: number | undefined;
-
-  function listener(): void {
-    eventCount++;
-    value = c.get();
-  }
-
-  afterEach(() => {
-    // Reset after each test
-    c.removeListener(listener);
-    a.set(1);
-    b.set(1);
-    eventCount = 0;
-    value = undefined;
-  });
-
-  test("Batch updates", () => {
-    c.addListener(listener);
-
-    a.set(2);
-    b.set(2);
-
-    queueMicrotask(() => {
-      expect(eventCount).toBe(1);
-      expect(value).toBe(4);
-    });
+    queueMicrotask(() => expect(value).toBe(4));
   });
 });

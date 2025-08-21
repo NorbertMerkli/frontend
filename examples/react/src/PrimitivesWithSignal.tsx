@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import {
-  DerivedSignal,
+  ComputedSignal,
   Signal,
   useSetSignal,
   useSignalValue,
@@ -10,7 +10,7 @@ import { cn, type PropsWithClassName } from "./utils/style";
 
 const a = new Signal(1);
 const b = new Signal(1);
-const c = new DerivedSignal((get) => get(a) + get(b));
+const c = new ComputedSignal((get) => get(a) + get(b));
 
 export const PrimitivesWithSignal = () => {
   return (

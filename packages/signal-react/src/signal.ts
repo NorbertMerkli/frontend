@@ -18,7 +18,7 @@ export function useSignalValue<T>(signal: ReadonlySignal<T>): T {
       },
       [signal]
     ),
-    signal.get
+    useCallback(() => signal.value, [signal])
   );
 }
 
@@ -28,9 +28,9 @@ export function useSetSignal<T>(
   return useCallback(
     (setStateAction: SetStateAction<T>) => {
       if (typeof setStateAction === "function") {
-        signal.set((setStateAction as (state: T) => T)(signal.get()));
+        signal.value = (setStateAction as (state: T) => T)(signal.value);
       } else {
-        signal.set(setStateAction);
+        signal.value = setStateAction;
       }
     },
     [signal]
