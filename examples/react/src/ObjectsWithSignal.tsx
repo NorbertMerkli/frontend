@@ -1,10 +1,6 @@
 import { useCallback, type ChangeEvent } from "react";
-import {
-  ComputedSignal,
-  Signal,
-  useSetSignal,
-  useSignalValue,
-} from "signal-react";
+
+import { Signal, useSignal } from "signal-react";
 
 interface User {
   name: string;
@@ -19,9 +15,6 @@ const user = new Signal<State>({
   age: null,
   gender: null,
 });
-const name = new ComputedSignal((get) => get(user).name ?? "");
-const age = new ComputedSignal((get) => get(user).age ?? 0);
-const gender = new ComputedSignal((get) => get(user).gender);
 
 export const ObjectsWithSignal = () => {
   return (
@@ -42,13 +35,11 @@ export const ObjectsWithSignal = () => {
 };
 
 const Name = () => {
-  const value = useSignalValue(name);
-
-  const setUser = useSetSignal(user);
+  const [name, setUser] = useSignal(user, (user) => user.name);
 
   const onChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) =>
-      setUser((user) => ({ ...user, name: event.target.value })),
+      setUser((user) => ({ ...user, name: event.target.value || null })),
     [setUser],
   );
 
@@ -61,7 +52,7 @@ const Name = () => {
         name="name"
         id="name"
         autoComplete="off"
-        value={value}
+        value={name ?? ""}
         onChange={onChange}
       />
     </>
@@ -69,15 +60,13 @@ const Name = () => {
 };
 
 const Age = () => {
-  const value = useSignalValue(age);
-
-  const setUser = useSetSignal(user);
+  const [age, setUser] = useSignal(user, (user) => user.age);
 
   const onChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) =>
       setUser((user) => ({
         ...user,
-        age: Number.parseInt(event.target.value),
+        age: event.target.value ? Number.parseInt(event.target.value) : null,
       })),
     [setUser],
   );
@@ -90,7 +79,7 @@ const Age = () => {
         type="number"
         name="age"
         id="age"
-        value={value}
+        value={age ?? 0}
         onChange={onChange}
       />
     </>
@@ -98,9 +87,7 @@ const Age = () => {
 };
 
 const Male = () => {
-  const checked = useSignalValue(gender) === "male";
-
-  const setUser = useSetSignal(user);
+  const [isMale, setUser] = useSignal(user, (user) => user.gender === "male");
 
   const onChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) =>
@@ -122,7 +109,7 @@ const Male = () => {
         type="radio"
         name="gender"
         id="signal-male"
-        checked={checked}
+        checked={isMale}
         onChange={onChange}
       />
     </label>
@@ -130,9 +117,10 @@ const Male = () => {
 };
 
 const Female = () => {
-  const checked = useSignalValue(gender) === "female";
-
-  const setUser = useSetSignal(user);
+  const [isFemale, setUser] = useSignal(
+    user,
+    (user) => user.gender === "female",
+  );
 
   const onChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) =>
@@ -154,7 +142,7 @@ const Female = () => {
         type="radio"
         name="gender"
         id="signal-female"
-        checked={checked}
+        checked={isFemale}
         onChange={onChange}
       />
     </label>

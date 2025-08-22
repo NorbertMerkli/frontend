@@ -1,12 +1,29 @@
 import {
   useCallback,
+  useLayoutEffect,
+  useRef,
   useSyncExternalStore,
   type Dispatch,
   type SetStateAction,
 } from "react";
+
 import { Signal, type ReadonlySignal } from "signal-core";
 
-export function useSignalValue<T>(signal: ReadonlySignal<T>): T {
+export function useSignalValue<T>(signal: ReadonlySignal<T>): T;
+export function useSignalValue<T, U>(
+  signal: ReadonlySignal<T>,
+  selector: ((signalValue: T) => U) | undefined
+): U;
+export function useSignalValue<T, U>(
+  signal: ReadonlySignal<T>,
+  selector?: ((signalValue: T) => U) | undefined
+): T | U {
+  const selectorRef = useRef(selector);
+
+  useLayoutEffect(() => {
+    selectorRef.current = selector;
+  }, [selector]);
+
   return useSyncExternalStore(
     useCallback(
       (listener) => {
@@ -18,7 +35,11 @@ export function useSignalValue<T>(signal: ReadonlySignal<T>): T {
       },
       [signal]
     ),
-    useCallback(() => signal.value, [signal])
+    useCallback(
+      () =>
+        selectorRef.current ? selectorRef.current(signal.value) : signal.value,
+      [signal]
+    )
   );
 }
 
@@ -39,6 +60,14 @@ export function useSetSignal<T>(
 
 export function useSignal<T>(
   signal: Signal<T>
-): [T, Dispatch<SetStateAction<T>>] {
-  return [useSignalValue(signal), useSetSignal(signal)];
+): [T, Dispatch<SetStateAction<T>>];
+export function useSignal<T, U>(
+  signal: Signal<T>,
+  selector: ((signalValue: T) => U) | undefined
+): [U, Dispatch<SetStateAction<T>>];
+export function useSignal<T, U>(
+  signal: Signal<T>,
+  selector?: ((signalValue: T) => U) | undefined
+): [T | U, Dispatch<SetStateAction<T>>] {
+  return [useSignalValue(signal, selector), useSetSignal(signal)];
 }
