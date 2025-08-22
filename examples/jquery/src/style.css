@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+@layer components {
+    .button {
+        @apply border-2 border-sky-500 rounded-full bg-sky-50 px-4 py-2 text-sky-900 uppercase;
+        @apply hover:bg-sky-100 duration-150 ease-out hover:tracking-widest active:scale-105 active:brightness-105;
+    }
+}
