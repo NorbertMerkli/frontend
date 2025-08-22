@@ -1,4 +1,4 @@
-import { scan } from "react-scan";
+import { scan } from "react-scan/all-environments";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -13,5 +13,5 @@ scan({
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
-  </StrictMode>
+  </StrictMode>,
 );

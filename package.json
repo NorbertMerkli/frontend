@@ -3,7 +3,10 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "test": "turbo run test"
+    "preview": "turbo run preview",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "dev": "turbo run dev"
   },
   "devDependencies": {
     "@types/node": "^24.0.13",

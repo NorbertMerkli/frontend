@@ -5,6 +5,16 @@
     "build": {
       "dependsOn": [
         "^build"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
+    },
+    "preview": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": [
+        "build"
       ]
     },
     "lint": {},
