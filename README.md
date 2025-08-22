@@ -10,16 +10,18 @@ A simple state management system to achieve fine-grained reactivity. Designed to
 
 The **Signal** is the basic primitive. The value can be gotten and set at any point in time, but listeners can be registered to be notified when a new value exists.
 
-The **DerivedSignal** can be used to combine values or subscribe to a subset of a complex object. The value cannot be set manually; rather, it updates automatically when any of the dependencies change.
-
-The **LinkedSignal** is the combination of the first two primitives. It updates when the linked value changes, but can be set manually as well.
+The **ComputedSignal** can be used to combine values or subscribe to a subset of a complex object. The value cannot be set manually; rather, it updates automatically when any of the dependencies change.
 
 ### signal-react
 
-The adapter that integrates the reactive system of the **signal-core** package into React.
+The adapter that integrates the reactive system of the **signal-core** package into **React**.
 
 ## Examples
 
 ### react
 
-This example project demonstrates how React's built-in state management can lead to unnecessary rerenders and how we can enhance performance by utilizing more advanced techniques. The app uses react-scan to visualize these rerenders.
+This example project demonstrates how **React**'s built-in state management can lead to unnecessary rerenders and how we can enhance performance by utilizing more advanced techniques. The app uses **react-scan** to visualize these rerenders.
+
+### jquery
+
+This example demonstrates how easily can we use signals in a **jQuery** project.
