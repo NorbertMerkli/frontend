@@ -23,5 +23,3 @@ The adapter that integrates the reactive system of the **signal-core** package i
 ### react
 
 This example project demonstrates how React's built-in state management can lead to unnecessary rerenders and how we can enhance performance by utilizing more advanced techniques. The app uses react-scan to visualize these rerenders.
-
-> The **signal-react** package isn't very user-friendly right now - it's pretty clunky when you need to work with parts of an object. The improvements we need will require some research.
